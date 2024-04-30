@@ -24,35 +24,27 @@ export const App = () => {
   const [modalImage, setModalImage] = useState('');
   const [modalAlt, setModalAlt] = useState('');
 
-  const prevSearchRef = useRef();
-  const prevPageRef = useRef();
-
   useEffect(() => {
-    const prevSearch = prevSearchRef.current;
-    const prevPage = prevPageRef.current;
-
     if (!search) return;
 
-    if (prevSearch !== search || prevPage !== page) {
-      setIsLoading(true);
+    setIsLoading(true);
 
-      getPhotos(search, page)
-        .then(data => {
-          if (data.hits.length === 0) {
-            setIsEmpty(true);
-            return;
-          }
+    getPhotos(search, page)
+      .then(data => {
+        if (data.hits.length === 0) {
+          setIsEmpty(true);
+          return;
+        }
 
-          setImages(prevImages => [...prevImages, ...data.hits]);
-          setShowMoreBtn(Math.ceil(data.totalHits / 12) > page);
-        })
-        .catch(err => {
-          setIsError(err.message);
-          alert(isError);
-        })
-        .finally(setIsLoading(false));
-    }
-  }, [page, search, isError]);
+        setImages(prevImages => [...prevImages, ...data.hits]);
+        setShowMoreBtn(Math.ceil(data.totalHits / 12) > page);
+      })
+      .catch(err => {
+        setIsError(err.message);
+        alert(err.message);
+      })
+      .finally(setIsLoading(false));
+  }, [page, search]);
 
   const handleSearch = searchTerm => {
     if (searchTerm === search) {
@@ -69,22 +61,6 @@ export const App = () => {
 
   const handleClick = () => {
     setPage(prevPage => prevPage + 1);
-  };
-
-  useEffect(() => {
-    const handleEsc = evt => {
-      if (modalOpen && evt.key === 'Escape') setModalOpen(false);
-    };
-
-    document.addEventListener('keydown', handleEsc);
-
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [modalOpen]);
-
-  const backdropClick = event => {
-    if (event.target === event.currentTarget) {
-      closeModal();
-    }
   };
 
   const showModal = (image, alt) => {
@@ -121,7 +97,12 @@ export const App = () => {
         ))}
       </ImageGallery>
       {modalOpen && (
-        <Modal img={modalImage} alt={modalAlt} closeModal={backdropClick} />
+        <Modal
+          img={modalImage}
+          alt={modalAlt}
+          modalOpen={modalOpen}
+          closeModal={closeModal}
+        />
       )}
       {isLoading && <Loader />}
       {showMoreBtn && <Button onClick={handleClick}>Load more</Button>}
